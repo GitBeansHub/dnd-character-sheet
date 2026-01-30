@@ -1,9 +1,9 @@
 path = "sheetroot/counters.csv"
+import csv
 
+data = []
 with open(path, "r") as f:
-    for line in f:
-        partition=line.split(',')
-        for i, item in enumerate(partition):
-            partition[i] = item.strip()
-        print(partition)
+    reader = csv.reader(f)
+    data = list(reader)
+
 
