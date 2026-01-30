@@ -16,7 +16,8 @@ external editors.
 With one exception, **all files are read only on application launch**. That exception is the
 Counters runtime state file, which is written by the application and treated as authoritative for
 live counter values. All other data is snapshotted. There are no filesystem reads after launch
-except on the counters state file.
+except on the counters state file.section
+
 ---
 ## 1) Counters Subsystem
 ### Purpose
@@ -143,7 +144,6 @@ text.txt
 1Backpack/
 text.txt
 2Equipment/
-text.txt
 2Spells/
 text.txt
 ```
@@ -200,6 +200,7 @@ A two-part, file-defined, manually authored character/workspace UI: **Counters**
 a CSV with live, file-authoritative runtime state, and **Text** rendered from a prefix-ordered
 folder tree of plain text sections—fully independent, predictable, and optimized for external
 editing.
+
 ---
 ### Software used
 
