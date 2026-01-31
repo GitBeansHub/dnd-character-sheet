@@ -1,5 +1,3 @@
-words
-more stuff
 path = "sheetroot/counters.csv"
 import csv
 data = []
