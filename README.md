@@ -9,14 +9,12 @@ sophomore in experience, but I will NOT be submitting this for anything.
 ## Project Summary
 This project is a manual-entry, zone-based character sheet / workspace system built around
 **two completely separate subsystems**: **Counters** and **Text**.
-In both subsystems, **files on disk are the sole source of truth**. The UI is a direct projection of
+In both subsystems, **files on disk are the launch-time source of truth**. The UI is a direct projection of
 those files. The system intentionally avoids automation, rule enforcement, and hidden logic. Its
 goals are flexibility, predictability, and safety through explicit user control and reliance on
 external editors.
-With one exception, **all files are read only on application launch**. That exception is the
-Counters runtime state file, which is written by the application and treated as authoritative for
-live counter values. All other data is snapshotted. There are no filesystem reads after launch
-except on the counters state file.section
+All files are read only on application launch. All data is snapshotted. There are no filesystem reads after 
+launch. The only file ever written to by the application is Counters.state.json.
 
 ---
 ## 1) Counters Subsystem
@@ -66,13 +64,12 @@ Malformed rows are therefore **visible in the UI** rather than silently discarde
 * The `id` field is the **stable identity** of a counter.
 * Changing a counter’s `name` preserves its state.
 * Changing a counter’s `id` creates a **new counter** with no prior state.
-* If there are multiple lines in the csv file with the same id, they will appear multiple times with
-the same value (stored in the json file)
+* If there are multiple lines in the csv file with the same id, subsequent ones will be stored as errors
 ---
 ### Counter Runtime State (JSON)
 * Stored at: `SheetRoot/Counters.state.json`
 * This file is **managed exclusively by the application** and must not be edited manually.
-* It is the authoritative source for **current counter values** while the app is running.
+* It is the authoritative source for **current counter values**.
 #### Contents
 * The file stores **only current values**, keyed by counter `id`.
 * No definition data (`name`, `reset`) is duplicated here.
@@ -86,50 +83,79 @@ Example:
 }
 ```
 ---
+
 ### Launch-Time Reconciliation Rules
+
 On application launch:
+
 1. Load and parse `Counters.csv` into counter definitions.
 2. Load `Counters.state.json` if it exists; otherwise treat it as empty.
 3. For each counter defined in the CSV:
-* If a current value exists in the JSON and is numeric, use it.
-* Otherwise, initialize the current value to the counter’s reset value.
-4. State entries whose `id` does not exist in the CSV are ignored and removed on the next write.
+
+   * If a current value exists in the JSON and is numeric, use it.
+   * Otherwise, initialize the current value to the counter’s reset value.
+   * If the value does not exist in the JSON, add it.
+4. State entries whose `id` does not exist in the CSV are ignored and removed.
+5. After reconciliation, the full counters state is held **in memory** for the lifetime of the application.
+
 This ensures CSV edits are safe and predictable:
+
 * Adding a counter → appears with `current = reset`
 * Removing a counter → disappears and its state is discarded
 * Changing `name` → label updates, current value preserved
 * Changing `reset` → reset behavior changes, current value preserved
+
 ---
-### Runtime Interaction Model (File-Authoritative)
-All UI actions follow the same rule:
-> **UI actions modify files; the UI updates in response to files.**
+
+### Runtime Interaction Model (In-Memory Authoritative)
+
+After application launch:
+
+* All counter data is sourced from **in-memory state only**.
+* No runtime reads of `Counters.state.json` occur.
+* The JSON file is used **solely as a persistence target**.
+
 For any interaction (increment, decrement, reset, reset all, inline edit):
-1. Read `Counters.state.json`
-2. Compute the new value(s)
-3. Atomically write the updated file
-4. Refresh the UI from the file contents
-There is no authoritative UI state and no persistent in-memory source of truth.
+
+1. Modify the in-memory counter state.
+2. Atomically write the updated state to `Counters.state.json`.
+
+The UI renders directly from in-memory state.
+The file is never re-read while the application is running.
+
 ---
+
 ### Direct Manipulation
+
 * Double-clicking a counter’s displayed number turns it into an inline text field.
 * This edits the **current value only**, not the reset value.
 * Commit on Enter or blur of a numeric value.
 * Cancel on Escape.
-* Cancel on Enter of blur of a non-numeric value.
+* Cancel on Enter or blur of a non-numeric value.
+
 ---
+
 ### File Safety and Concurrency
+
 * All writes to `Counters.state.json` are **atomic** (write temp file, then replace).
 * The application enforces a **single-instance lock** at startup.
 * If another instance is already running, the second instance must not take control.
-* External edits to the state file are unsupported and undefined behavior.
+* External edits to the state file while the app is running are unsupported and undefined behavior.
+
 ---
+
+If you want, next we can:
+
+* Tighten the wording even further to be “spec-level strict”, or
+* Update the **one-line project description** so it reflects this same rule.
+
 ## 2) Text Subsystem
 ### Purpose
 A flexible navigation and content workspace called the **Text Zone (TZ)**, backed entirely by a
 snapshot of folders and plain text files.
 ---
 ### File System as Structure
-* Root directory: `SheetRoot/’
+* Root directory: `SheetRoot/`
 * Each section’s content is stored in a file named `text.md` inside that folder. If this file doesn’t
 exist, it is assumed to be blank.
 * The TZ ignores anything that is not a folder or a file called text.md.
@@ -196,10 +222,9 @@ There are no dependencies or references between the two systems.
 * Minimal hidden logic; behavior is predictable and visible.
 ---
 ### One-Line Description
-A two-part, file-defined, manually authored character/workspace UI: **Counters** rendered from
-a CSV with live, file-authoritative runtime state, and **Text** rendered from a prefix-ordered
-folder tree of plain text sections—fully independent, predictable, and optimized for external
-editing.
+A two-part, file-defined, manually authored character/workspace UI: Counters rendered from a CSV with 
+in-memory authoritative runtime state persisted to disk, and Text rendered from a prefix-ordered folder 
+tree of plain text sections.
 
 ---
 ### Software used
