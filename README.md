@@ -16,7 +16,8 @@ external editors.
 With one exception, **all files are read only on application launch**. That exception is the
 Counters runtime state file, which is written by the application and treated as authoritative for
 live counter values. All other data is snapshotted. There are no filesystem reads after launch
-except on the counters state file.
+except on the counters state file.section
+
 ---
 ## 1) Counters Subsystem
 ### Purpose
@@ -129,23 +130,22 @@ snapshot of folders and plain text files.
 ---
 ### File System as Structure
 * Root directory: `SheetRoot/’
-* Each section’s content is stored in a file named `text.txt` inside that folder. If this file doesn’t
+* Each section’s content is stored in a file named `text.md` inside that folder. If this file doesn’t
 exist, it is assumed to be blank.
-* The TZ ignores anything that is not a folder or a file called text.txt.
+* The TZ ignores anything that is not a folder or a file called text.md.
 Example:
 ```
 SheetRoot/
-text.txt
+text.md
 counters.csv
 counters.state.json
 1Inventory/
-text.txt
+text.md
 1Backpack/
-text.txt
+text.md
 2Equipment/
-text.txt
 2Spells/
-text.txt
+text.md
 ```
 ---
 ### UI Navigation Model
@@ -159,8 +159,8 @@ text.txt
 * A **Back** button navigates one level upward.
 #### Content Area
 * Fixed size.
-* Displays the contents of the selected folder’s `text.txt`.
-* If `text.txt` is missing, the content area is blank.
+* Displays the contents of the selected folder’s `text.md`.
+* If `text.md` is missing, the content area is blank.
 ---
 ### Ordering via Hidden Prefix Character
 * Sorting is alphabetical based on folder name.
@@ -173,7 +173,7 @@ Example:
 ### Editing Workflow
 * All structure changes are performed via the filesystem:
 * Creating, renaming, deleting folders
-* Editing `text.txt` files externally
+* Editing `text.md` files externally
 * The Text subsystem is **read only on application launch**.
 * No live refresh occurs while the app is running.
 ---
@@ -184,7 +184,7 @@ The application consists of two non-connected parts:
 * Definitions: `Counters.csv` (manual, launch-only)
 * State: `Counters.state.json` (app-managed, live)
 2. **Text**
-* Structure and content: folder tree + `text.txt` files (manual, launch-only)
+* Structure and content: folder tree + `text.md` files (manual, launch-only)
 There are no dependencies or references between the two systems.
 ---
 ### Core Design Principles
@@ -200,6 +200,7 @@ A two-part, file-defined, manually authored character/workspace UI: **Counters**
 a CSV with live, file-authoritative runtime state, and **Text** rendered from a prefix-ordered
 folder tree of plain text sections—fully independent, predictable, and optimized for external
 editing.
+
 ---
 ### Software used
 
