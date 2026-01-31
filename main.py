@@ -24,14 +24,24 @@ print("Window created")
 
 # Main loop
 while not glfw.window_should_close(window):
-    glfw.poll_events() #have window respond to inputs
-    OpenGL.GL.glClearColor(1.1,.1,1.1,1) #pick color to clear screen to
-    OpenGL.GL.glClear(OpenGL.GL.GL_COLOR_BUFFER_BIT) #clear screen
-    #add hello world to screen
 
+
+    glfw.poll_events()
+    #process inputs, new frame, render
+    impl.process_inputs()
+    imgui.new_frame()
+    #add hello world to screen
+    imgui.begin(" etst window")
+    imgui.text("Hello, world!")
+    imgui.text("This is imgui with GLFW and OpenGL3")
+    imgui.end()
+
+    imgui.render()
+    impl.render(imgui.get_draw_data())
     #Needs keepalive code to keep window open
     glfw.swap_buffers(window) #update window with cleared color
 
 # Cleanup and exit
+impl.shutdown()
 glfw.terminate()
 print("GLFW terminated")
