@@ -31,36 +31,126 @@ def init_imgui(window):
 window=init_window()
 impl=init_imgui(window)
 md_text = read_file("sheetroot/text.md")
+min_left_w=0
+min_nav_w=0
+min_top_h=0
+left_w=.2
+nav_w=.1
+top_h=.15
 
 # Function to clear the screen
 def clear_screen():
     OpenGL.GL.glClearColor(0.1, 0.1, 1.1, 1)
     OpenGL.GL.glClear(OpenGL.GL.GL_COLOR_BUFFER_BIT)
 
-# Function to draw the UI
-def draw_ui(md_text):
-    imgui.set_next_window_position(0, 0)
-    resolution=imgui.get_io()
-    width=resolution.display_size.x
-    height=resolution.display_size.y
-    
+#text zone
+def draw_tz(left_w, nav_w, top_h, w, h, md_text):
+    width = w*(1 - left_w - nav_w)
+    height = h*(1 - top_h)
+    imgui.set_next_window_position(w-width, h-height)
     imgui.set_next_window_size(width, height)
-    
 
     imgui.begin(
-    "Text.md (raw)",
-    False,
-    imgui.WINDOW_NO_TITLE_BAR |
-    imgui.WINDOW_NO_RESIZE |
-    imgui.WINDOW_NO_MOVE |
-    imgui.WINDOW_NO_COLLAPSE
+        "Text.md (raw)",
+        False,
+        imgui.WINDOW_NO_TITLE_BAR |
+        imgui.WINDOW_NO_RESIZE |
+        imgui.WINDOW_NO_MOVE |
+        imgui.WINDOW_NO_COLLAPSE
     )
+
     imgui.begin_child("scroll", 0, 0, True)
     imgui.push_text_wrap_pos(0.0)
     imgui.text_unformatted(md_text)
     imgui.pop_text_wrap_pos()
     imgui.end_child()
     imgui.end()
+    
+#counter zone
+def draw_cz(left_w, nav_w, top_h, w, h, md_text):
+    width = w*left_w
+    height=h
+    imgui.set_next_window_position(0, 0)
+    imgui.set_next_window_size(width, height)
+
+    imgui.begin(
+        "Counter Area (raw)",
+        False,
+        imgui.WINDOW_NO_TITLE_BAR |
+        imgui.WINDOW_NO_RESIZE |
+        imgui.WINDOW_NO_MOVE |
+        imgui.WINDOW_NO_COLLAPSE
+    )
+
+    imgui.begin_child("scroll", 0, 0, True)
+    imgui.push_text_wrap_pos(0.0)
+    imgui.text_unformatted(md_text)
+    imgui.pop_text_wrap_pos()
+    imgui.end_child()
+    imgui.end()
+    
+#top inventory selector
+def draw_top(left_w, nav_w, top_h, w, h, md_text):
+    width = w*(1-left_w)
+    height=h*top_h
+    imgui.set_next_window_position(w*left_w, 0)
+    imgui.set_next_window_size(width, height)
+
+    imgui.begin(
+        "Top Inventory Selector (raw)",
+        False,
+        imgui.WINDOW_NO_TITLE_BAR |
+        imgui.WINDOW_NO_RESIZE |
+        imgui.WINDOW_NO_MOVE |
+        imgui.WINDOW_NO_COLLAPSE
+    )
+
+    imgui.begin_child("scroll", 0, 0, True)
+    imgui.push_text_wrap_pos(0.0)
+    imgui.text_unformatted(md_text)
+    imgui.pop_text_wrap_pos()
+    imgui.end_child()
+    imgui.end()
+#side inventory selector
+def draw_nav(left_w, nav_w, top_h, w, h, md_text):
+    width = w*(nav_w)
+    height=h*(1-top_h)
+    imgui.set_next_window_position(w*left_w, h*top_h)
+    imgui.set_next_window_size(width, height)
+
+    imgui.begin(
+        "Side Inventory Selector (raw)",
+        False,
+        imgui.WINDOW_NO_TITLE_BAR |
+        imgui.WINDOW_NO_RESIZE |
+        imgui.WINDOW_NO_MOVE |
+        imgui.WINDOW_NO_COLLAPSE
+    )
+
+    imgui.begin_child("scroll", 0, 0, True)
+    imgui.push_text_wrap_pos(0.0)
+    imgui.text_unformatted(md_text)
+    imgui.pop_text_wrap_pos()
+    imgui.end_child()
+    imgui.end()
+
+# Function to draw the UI
+def draw_ui(md_text):
+    io = imgui.get_io()
+    w = io.display_size.x
+    h = io.display_size.y
+
+    #pull TZ text
+    draw_tz(left_w, nav_w, top_h, w, h, md_text)
+
+    #pull CZ text
+    draw_cz(left_w, nav_w, top_h, w, h, md_text)
+
+    #pull top text
+    draw_top(left_w, nav_w, top_h, w, h, md_text)
+
+    #pull nav text
+    draw_nav(left_w, nav_w, top_h, w, h, md_text)
 
 
 # Frame function to handle rendering and input
