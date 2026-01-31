@@ -6,3 +6,9 @@ data = []
 with open(path, "r") as f:
     reader = csv.reader(f)
     data = list(reader)
+
+
+python -m pip install imgui glfw PyOpenGL numpy
+.\.venv\Scripts\Activate.ps1
+where python
+python -m venv .venv
