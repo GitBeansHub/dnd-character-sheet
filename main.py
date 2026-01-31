@@ -39,7 +39,22 @@ def clear_screen():
 
 # Function to draw the UI
 def draw_ui(md_text):
-    imgui.begin("Text.md (raw)")
+    imgui.set_next_window_position(0, 0)
+    resolution=imgui.get_io()
+    width=resolution.display_size.x
+    height=resolution.display_size.y
+    
+    imgui.set_next_window_size(width, height)
+    
+
+    imgui.begin(
+    "Text.md (raw)",
+    False,
+    imgui.WINDOW_NO_TITLE_BAR |
+    imgui.WINDOW_NO_RESIZE |
+    imgui.WINDOW_NO_MOVE |
+    imgui.WINDOW_NO_COLLAPSE
+    )
     imgui.begin_child("scroll", 0, 0, True)
     imgui.push_text_wrap_pos(0.0)
     imgui.text_unformatted(md_text)
