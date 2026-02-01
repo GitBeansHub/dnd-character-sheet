@@ -1,3 +1,5 @@
-hp,Health,15
-mp,Mana,32
+hp,Health,15,12
+mp,Mana,32,4
+arrows,Arrows,20
+portions,Potions,5,bad
 bardrows
