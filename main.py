@@ -15,12 +15,6 @@ nav_text_size = 0.05 # Nav Text Size (as fraction of width)
 nav_padding_size = 0.02 # Nav Padding Size (as fraction of width)
 CZ_text_size = 0.09 # CZ Text Size (as fraction of width)
 CZ_padding_size = 0.02 # CZ Padding Size (as fraction of width)
-
-# Function to read a file
-def read_file(path):
-    with open(path, "a+", encoding="utf-8") as f:
-        f.seek(0)  # move pointer to beginning
-        return f.read()
 # Node dataclass
 @dataclass
 class Node:
@@ -33,7 +27,14 @@ class Node:
     @property
     def name_ui(self) -> str:
         return self.name_disk[0:]  # hides the prefix character
-# Function to create a directory tree
+    @property
+    def has_children(self) -> bool:
+        return bool(self.children)
+# Function to manage file reading
+def read_file(path):
+    with open(path, "a+", encoding="utf-8") as f:
+        f.seek(0)  # move pointer to beginning
+        return f.read()
 def make_dir_tree(base_path, parent=None):
     node = Node(
         name_disk=os.path.basename(base_path),
@@ -76,16 +77,15 @@ def init_imgui(window):
     impl = imgui.integrations.glfw.GlfwRenderer(window)
     impl.refresh_font_texture()
     return impl
-
 # Setup basic variables
 window = init_window()
 impl = init_imgui(window)
 tree = make_dir_tree(sheetroot)  
-# Bandaid to read files for CZ and TZ
 cz_text = read_file("sheetroot/counters.csv")
 nav_selected: "Node | None" = None
 text_selected: "str | None" = read_file("sheetroot/text.md")
-# Font size
+pending_click, pending_click_time = None, 0.0
+# Draw functions for different UI sections
 def set_font_size(size):
     size = max(0, min(40, int(size)))
     if fonts:
@@ -93,7 +93,6 @@ def set_font_size(size):
 def pop_font():
     if fonts:
         imgui.pop_font()
-# Draw functions for different UI sections
 def draw_tz(left_w, nav_w, top_h, w, h):
     global text_selected
     width = w * (1 - left_w - nav_w)
@@ -117,7 +116,7 @@ def draw_tz(left_w, nav_w, top_h, w, h):
     imgui.end_child()
     pop_font()
     imgui.end()
-def draw_cz(left_w, nav_w, top_h, w, h, content):
+def draw_cz(left_w, nav_w, top_h, w, h):
     width = w * left_w
     height = h
     imgui.set_next_window_position(0, 0)
@@ -134,7 +133,7 @@ def draw_cz(left_w, nav_w, top_h, w, h, content):
 
     imgui.begin_child("scroll", 0, 0, True)
     imgui.push_text_wrap_pos(0.0)
-    imgui.text_unformatted(content)
+    imgui.text_unformatted(cz_text)
     imgui.pop_text_wrap_pos()
     imgui.end_child()
     imgui.end()
@@ -157,17 +156,20 @@ def draw_top(left_w, nav_w, top_h, w, h):
     io = imgui.get_io()
     if imgui.is_window_hovered() and io.mouse_wheel != 0.0:
         imgui.set_scroll_x(imgui.get_scroll_x() - io.mouse_wheel * 30.0)
-
-    set_font_size(height * top_text_size)  # Set font size based on window height
+    # Make Buttons
+    set_font_size(height * top_text_size)  
     imgui.push_style_var(imgui.STYLE_FRAME_PADDING, (12, height * top_padding_size))
     for i, child in enumerate(tree.children):
         if i > 0:
             imgui.same_line()
-        if imgui.button(f"{child.name_ui}##top_{child.name_disk}"):
-            print("clicked top:", child.path)
+        imgui.button(f"{child.name_ui}##top_{child.name_disk}")
+        if imgui.is_item_activated():  # mouse down (single-click start)
             nav_selected = child
-            text_selected = child.content
+            print("clicked top:", child.path)
             print(nav_selected.name_disk)
+
+        if imgui.is_item_clicked() and imgui.is_mouse_double_clicked(0):  # mouse up (double-click confirmed)
+            text_selected = child.content
     pop_font()
     imgui.pop_style_var()
 
@@ -199,7 +201,7 @@ def draw_nav(left_w, nav_w, top_h, w, h):
             print("clicked nav:", child.path)
             text_selected = child.content
         imgui.separator()
-    if nav_selected and nav_selected.parent:
+    if nav_selected and nav_selected.parent and nav_selected.parent.parent:
         if imgui.button("Back"):
             nav_selected = nav_selected.parent
             print("navigated back to:", nav_selected.path)
@@ -220,7 +222,7 @@ def draw_ui():
     draw_tz(left_w, nav_w, top_h, w, h)
 
     # pull CZ text
-    draw_cz(left_w, nav_w, top_h, w, h, cz_text)
+    draw_cz(left_w, nav_w, top_h, w, h)
 
     # pull top text
     draw_top(left_w, nav_w, top_h, w, h)
